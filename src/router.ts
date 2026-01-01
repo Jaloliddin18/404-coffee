@@ -3,4 +3,8 @@ import memberController from './controllers/member.controller';
 
 const router = express.Router();
 
+router
+	.post('/login', memberController.login)
+	.post('/signup', memberController.signup);
+
 export default router;
