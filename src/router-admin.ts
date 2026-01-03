@@ -24,20 +24,26 @@ routerAdmin.get('/logout', coffeeshopController.logout);
 /** Products */
 routerAdmin.get(
 	'/product/all',
-	coffeeshopController.verifyRestaurant,
+	coffeeshopController.verifyCoffeeShop,
 	productController.getAllProducts,
 );
 routerAdmin.post(
 	'/product/create',
-	coffeeshopController.verifyRestaurant,
+	coffeeshopController.verifyCoffeeShop,
 	makeUploader('products').array('productImages', 5),
 	productController.createNewProduct,
 );
 routerAdmin.post(
 	'/product/:id',
-	coffeeshopController.verifyRestaurant,
+	coffeeshopController.verifyCoffeeShop,
 	productController.updateChosenProduct,
 );
 /** Users */
+routerAdmin.get(
+	'/user/all',
+	coffeeshopController.verifyCoffeeShop,
+	coffeeshopController.getUsers,
+);
+// routerAdmin.post('/user/edit', coffeeshopController.updateChosenUser);
 
 export default routerAdmin;
