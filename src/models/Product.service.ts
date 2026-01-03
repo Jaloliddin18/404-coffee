@@ -5,6 +5,7 @@ class ProductService {
 	constructor() {
 		this.productModel = ProductModel;
 	}
+	/** BSSR */
 }
 
 export default ProductService;

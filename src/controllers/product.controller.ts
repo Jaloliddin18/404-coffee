@@ -3,6 +3,7 @@ import ProductService from '../models/Product.service';
 import Errors, { HttpCode, Message } from '../libs/Error';
 import { T } from '../libs/types/common';
 import { AdminRequest } from '../libs/types/member';
+import { ProductInput } from '../libs/types/product';
 
 const productService = new ProductService();
 const productController: T = {};
@@ -44,8 +45,6 @@ productController.createNewProduct = async (
 productController.updateChosenProduct = async (req: Request, res: Response) => {
 	try {
 		console.log('updateChosenProduct');
-		const id = req.params.id;
-		console.log('id:', id);
 
 		res.status(HttpCode.OK).json();
 	} catch (err) {
