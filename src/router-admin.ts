@@ -44,6 +44,6 @@ routerAdmin.get(
 	coffeeshopController.verifyCoffeeShop,
 	coffeeshopController.getUsers,
 );
-// routerAdmin.post('/user/edit', coffeeshopController.updateChosenUser);
+routerAdmin.post('/user/edit', coffeeshopController.updateChosenUser);
 
 export default routerAdmin;
