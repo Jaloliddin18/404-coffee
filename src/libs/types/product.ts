@@ -11,9 +11,9 @@ export interface Product {
 	productCollection: ProductCollection;
 	productName: string;
 	productPrice: number;
-	productLeftCount: number;
+	productLeftCount?: number;
 	productSize: ProductSize;
-	productDesc?: string;
+	productDesc: string;
 	productImages: string[];
 	productViews: number;
 	createdAt: Date;
@@ -25,7 +25,7 @@ export interface ProductInput {
 	productCollection: ProductCollection;
 	productName: string;
 	productPrice: number;
-	productLeftCount: number;
+	productLeftCount?: number;
 	productSize?: ProductSize;
 	productDesc?: string;
 	productImages?: string[];

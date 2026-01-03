@@ -8,6 +8,7 @@ import { ProductInput } from '../libs/types/product';
 const productService = new ProductService();
 const productController: T = {};
 
+/** BSSR */
 productController.getAllProducts = async (req: Request, res: Response) => {
 	try {
 		console.log('getAllProducts');
@@ -28,6 +29,12 @@ productController.createNewProduct = async (
 		console.log('createNewProduct');
 		if (!req.files?.length)
 			throw new Errors(HttpCode.INTERNAL_SERVER_ERROR, Message.CREATE_FAILED);
+
+		const data: ProductInput = req.body;
+		data.productImages = req.files?.map((ele) => {
+			return ele.path;
+		});
+		await productService.createNewproduct(data);
 
 		res.send(
 			`<script> alert("${'Successful Creation'}"); window.location.replace("/admin/product/all") </script>`,
@@ -53,5 +60,7 @@ productController.updateChosenProduct = async (req: Request, res: Response) => {
 		else res.status(Errors.standard.code).json(Errors.standard);
 	}
 };
+
+/** SPA */
 
 export default productController;

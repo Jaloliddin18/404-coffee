@@ -27,7 +27,6 @@ const productSchema = new Schema(
 		},
 		productLeftCount: {
 			type: Number,
-			required: true,
 		},
 		productSize: {
 			type: String,
