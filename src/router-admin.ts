@@ -1,6 +1,7 @@
 import express from 'express';
 import coffeeshopController from './controllers/coffeeshop.controller';
 import productController from './controllers/product.controller';
+import makeUploader from './libs/utils/uploader';
 
 const routerAdmin = express.Router();
 
@@ -12,7 +13,11 @@ routerAdmin
 	.post('/login', coffeeshopController.processLogin);
 routerAdmin
 	.get('/signup', coffeeshopController.getSignup)
-	.post('/signup', coffeeshopController.processSignup);
+	.post(
+		'/signup',
+		makeUploader('members').single('memberImage'),
+		coffeeshopController.processSignup,
+	);
 routerAdmin.get('/check-me', coffeeshopController.checkAuthSession);
 routerAdmin.get('/logout', coffeeshopController.logout);
 
@@ -25,6 +30,7 @@ routerAdmin.get(
 routerAdmin.post(
 	'/product/create',
 	coffeeshopController.verifyRestaurant,
+	makeUploader('products').array('productImages', 5),
 	productController.createNewProduct,
 );
 routerAdmin.post(
