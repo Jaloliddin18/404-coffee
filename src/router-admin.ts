@@ -17,9 +17,21 @@ routerAdmin.get('/check-me', coffeeshopController.checkAuthSession);
 routerAdmin.get('/logout', coffeeshopController.logout);
 
 /** Products */
-routerAdmin.get('/product/all', productController.getAllProducts);
-routerAdmin.post('/product/create', productController.createNewProduct);
-routerAdmin.post('/product/:id', productController.updateChosenProduct);
+routerAdmin.get(
+	'/product/all',
+	coffeeshopController.verifyRestaurant,
+	productController.getAllProducts,
+);
+routerAdmin.post(
+	'/product/create',
+	coffeeshopController.verifyRestaurant,
+	productController.createNewProduct,
+);
+routerAdmin.post(
+	'/product/:id',
+	coffeeshopController.verifyRestaurant,
+	productController.updateChosenProduct,
+);
 /** Users */
 
 export default routerAdmin;
