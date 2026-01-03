@@ -12,6 +12,7 @@ routerAdmin
 routerAdmin
 	.get('/signup', coffeeshopController.getSignup)
 	.post('/signup', coffeeshopController.processSignup);
+routerAdmin.get('/check-me', coffeeshopController.checkAuthSession);
 
 /** Products */
 /** Users */
