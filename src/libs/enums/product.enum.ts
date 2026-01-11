@@ -3,6 +3,7 @@ export enum ProductSize {
 	MEDIUM = 'MEDIUM',
 	LARGE = 'LARGE',
 	SET = 'SET',
+	REGULAR = 'REGULAR',
 }
 
 export enum ProductStatus {

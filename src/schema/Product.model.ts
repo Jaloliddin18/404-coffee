@@ -51,7 +51,7 @@ const productSchema = new Schema(
 productSchema.index(
 	{
 		productName: 1,
-		ProductSize: 1,
+		productSize: 1,
 	},
 	{ unique: true },
 );
