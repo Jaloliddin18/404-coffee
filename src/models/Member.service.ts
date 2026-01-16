@@ -17,6 +17,16 @@ class MemberService {
 		this.memberModel = MemberModel;
 	}
 	/** SPA */
+
+	public async getCoffeeShop(): Promise<Member> {
+		const result = await this.memberModel
+			.findOne({ memberType: MemberType.COFFEESHOP })
+			.exec();
+		if (!result) throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+
+		return result;
+	}
+
 	public async signup(input: MemberInput): Promise<Member> {
 		const salt = await bycript.genSalt();
 		input.memberPassword = await bycript.hash(input.memberPassword, salt);
@@ -52,6 +62,43 @@ class MemberService {
 		if (!isMatch)
 			throw new Errors(HttpCode.UNAUTHORIZED, Message.WRONG_PASSWORD);
 		return await this.memberModel.findById(member._id).lean().exec();
+	}
+
+	public async getMemberDetail(member: Member): Promise<Member> {
+		const memberId = shapeIntoMongooseObjectId(member._id);
+		const result = await this.memberModel
+			.findOne({
+				_id: memberId,
+				memberStatus: MemberStatus.ACTIVE,
+			})
+			.exec();
+		if (!result) throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+		return result;
+	}
+
+	public async updateMember(
+		member: Member,
+		input: MemberUpdateInput,
+	): Promise<Member> {
+		const memberId = shapeIntoMongooseObjectId(member._id);
+		const result = await this.memberModel
+			.findByIdAndUpdate({ _id: memberId }, input, { new: true })
+			.exec();
+		if (!result) throw new Errors(HttpCode.NOT_MODIFIED, Message.UPDATE_FAILED);
+		return result;
+	}
+
+	public async getTopUsers(): Promise<Member[]> {
+		const result = await this.memberModel
+			.find({
+				memberStatus: MemberStatus.ACTIVE,
+				memberPoints: { $gte: 1 }, // $gte => greater than 1, query COMMAND
+			})
+			.sort({ memberPoints: -1 }) // yuqoridan pastga
+			.limit(4)
+			.exec();
+		if (!result) throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+		return result;
 	}
 
 	/** BSSR */
