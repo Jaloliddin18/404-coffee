@@ -17,13 +17,13 @@ const memberService = new MemberService();
 const authService = new AuthService();
 const memberController: T = {};
 
-memberController.getRestaurant = async (req: Request, res: Response) => {
+memberController.getCoffeeShop = async (req: Request, res: Response) => {
 	try {
-		console.log('getRestaurant');
+		console.log('getCoffeeShop');
 		const result = await memberService.getCoffeeShop();
 		res.status(HttpCode.OK).json(result);
 	} catch (err) {
-		console.log('Error getRestaurant', err);
+		console.log('Error getCoffeeShop', err);
 		if (err instanceof Errors) res.status(err.code).json(err);
 		else res.status(Errors.standard.code).json(Errors.standard);
 	}

@@ -2,11 +2,52 @@ import { Request, Response } from 'express';
 import ProductService from '../models/Product.service';
 import Errors, { HttpCode, Message } from '../libs/Error';
 import { T } from '../libs/types/common';
-import { AdminRequest } from '../libs/types/member';
-import { ProductInput } from '../libs/types/product';
+import { AdminRequest, ExtendedRequest } from '../libs/types/member';
+import { ProductInput, ProductInquiry } from '../libs/types/product';
+import { ProductCollection } from '../libs/enums/product.enum';
 
 const productService = new ProductService();
 const productController: T = {};
+
+/** SPA */
+productController.getProducts = async (req: Request, res: Response) => {
+	try {
+		console.log('getProducts');
+		const { page, limit, order, productCollection, search } = req.query; // array destructure
+		const inquiry: ProductInquiry = {
+			order: String(order),
+			page: Number(page),
+			limit: Number(limit),
+		};
+		if (productCollection) {
+			inquiry.productCollection = productCollection as ProductCollection;
+		}
+		if (search) inquiry.search = String(search);
+
+		const result = await productService.getProducts(inquiry);
+
+		res.status(HttpCode.OK).json(result);
+	} catch (err) {
+		console.log('Error getProducts', err);
+		if (err instanceof Errors) res.status(err.code).json(err);
+		else res.status(Errors.standard.code).json(Errors.standard);
+	}
+};
+
+productController.getProduct = async (req: ExtendedRequest, res: Response) => {
+	try {
+		console.log('getProduct');
+		const { id } = req.params;
+		console.log('req.member:', req.params);
+		const memberId = req.member?._id ?? null,
+			result = await productService.getProduct(memberId, id);
+		res.status(HttpCode.OK).json(result);
+	} catch (err) {
+		console.log('Error getProduct', err);
+		if (err instanceof Errors) res.status(err.code).json(err);
+		else res.status(Errors.standard.code).json(Errors.standard);
+	}
+};
 
 /** BSSR */
 productController.getAllProducts = async (req: Request, res: Response) => {
