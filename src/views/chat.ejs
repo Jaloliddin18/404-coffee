@@ -1,0 +1,82 @@
+<%- include('includes/header') %>
+
+<link rel="stylesheet" type="text/css" href="/css/chat.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.4/socket.io.min.js"></script>
+
+<body>
+  <div class="chat-admin-container">
+    <div class="navigation-menu">
+      <ul class="nav justify-content-center">
+        <li class="nav-item" style="cursor: pointer">
+          <a class="nav-link" href="/admin/">Home</a>
+        </li>
+        <li class="nav-item" style="cursor: pointer">
+          <a class="nav-link" href="/admin/product/all">Menu</a>
+        </li>
+        <li class="nav-item" style="cursor: pointer">
+          <a class="nav-link" href="/admin/user/all">Users</a>
+        </li>
+        <li class="nav-item" style="cursor: pointer">
+          <a class="nav-link active" href="/admin/chat/all">Chat</a>
+        </li>
+        <li
+          class="nav-item"
+          style="cursor: pointer"
+          onclick="return confirm('Do you want to logout?')"
+        >
+          <a class="nav-link" href="/admin/logout">Logout</a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="chat-frame">
+      <div class="board">
+        <span class="header-name">Customer Chat Support</span>
+        
+        <div class="chat-layout">
+          <!-- Chat List Sidebar -->
+          <div class="chat-sidebar">
+            <div class="sidebar-header">
+              <span>Chat Requests</span>
+              <span class="badge" id="pending-count">0</span>
+            </div>
+            <div class="chat-list" id="chat-list">
+              <div class="no-chats">
+                <p>No active chats</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chat Main Area -->
+          <div class="chat-main">
+            <div class="chat-header" id="chat-header">
+              <span>Select a chat to start responding</span>
+            </div>
+            <div class="messages-container" id="messages-container">
+              <div class="no-messages">
+                <div class="empty-state">
+                  <span class="icon"></span>
+                  <p>Select a conversation from the left panel</p>
+                </div>
+              </div>
+            </div>
+            <div class="chat-input-container" id="chat-input-container" style="display: none;">
+              <form id="message-form">
+                <input type="text" id="message-input" placeholder="Type your response..." autocomplete="off" />
+                <button type="submit" class="send-btn">Send</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const adminId = '<%= admin._id %>';
+    const adminNick = '<%= admin.memberNick %>';
+  </script>
+  <script type="text/javascript" src="/js/chat.js"></script>
+</body>
+
+<%- include('includes/footer') %>

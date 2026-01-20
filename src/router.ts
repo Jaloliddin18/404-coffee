@@ -3,6 +3,7 @@ import memberController from './controllers/member.controller';
 import uploader from './libs/utils/uploader';
 import productController from './controllers/product.controller';
 import orderController from './controllers/order.controller';
+import chatController from './controllers/chat.controller';
 
 const router = express.Router();
 
@@ -57,4 +58,14 @@ router.post(
 	orderController.updateOrder,
 );
 
+/** Chat **/
+router.get(
+	'/chat/room',
+	memberController.verifyAuth,
+	chatController.getOrCreateRoom,
+);
+router.get('/chat/messages/:roomId', chatController.getMessages);
+router.post('/chat/ai', chatController.aiChat);
+
 export default router;
+

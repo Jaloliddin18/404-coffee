@@ -1,11 +1,15 @@
 import { NextFunction, Request, Response } from 'express';
 import { T } from '../libs/types/common';
 import MemberService from '../models/Member.service';
+import ChatService from '../models/Chat.service';
 import { AdminRequest, LoginInput, MemberInput } from '../libs/types/member';
 import { MemberType } from '../libs/enums/member.enum';
 import Errors, { HttpCode, Message } from '../libs/Error';
+import { shapeIntoMongooseObjectId } from '../libs/config';
+import { broadcastMemberStatusUpdate } from '../libs/socket.handler';
 
 const memberService = new MemberService();
+const chatService = new ChatService();
 const coffeeshopController: T = {};
 
 coffeeshopController.goHome = (req: Request, res: Response) => {
@@ -120,6 +124,18 @@ coffeeshopController.updateChosenUser = async (
 
 		const result = await memberService.updateChosenUser(req.body);
 
+		// Sync member status to their chat rooms
+		if (req.body.memberStatus) {
+			const updatedRooms = await chatService.updateMemberStatusInRooms(
+				shapeIntoMongooseObjectId(req.body._id),
+				req.body.memberStatus
+			);
+			console.log(`Updated member status in ${updatedRooms} chat rooms`);
+
+			// Broadcast to admins viewing the chat page
+			broadcastMemberStatusUpdate(req.body._id, req.body.memberStatus);
+		}
+
 		res.status(HttpCode.OK).json({ data: result });
 	} catch (err) {
 		console.log('Error, updateChosenUser', err);
@@ -156,6 +172,16 @@ coffeeshopController.verifyCoffeeShop = (
 		res.send(
 			`<script> alert("${message}"); window.location.replace("/admin/login"); </script>`,
 		);
+	}
+};
+
+coffeeshopController.getChatPage = async (req: AdminRequest, res: Response) => {
+	try {
+		console.log('getChatPage');
+		res.render('chat', { admin: req.session.member });
+	} catch (err) {
+		console.log('Error getChatPage', err);
+		res.redirect('/admin');
 	}
 };
 

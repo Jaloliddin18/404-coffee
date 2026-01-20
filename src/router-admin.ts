@@ -1,6 +1,7 @@
 import express from 'express';
 import coffeeshopController from './controllers/coffeeshop.controller';
 import productController from './controllers/product.controller';
+import chatController from './controllers/chat.controller';
 import makeUploader from './libs/utils/uploader';
 
 const routerAdmin = express.Router();
@@ -46,4 +47,27 @@ routerAdmin.get(
 );
 routerAdmin.post('/user/edit', coffeeshopController.updateChosenUser);
 
+/** Chat */
+routerAdmin.get(
+	'/chat/all',
+	coffeeshopController.verifyCoffeeShop,
+	coffeeshopController.getChatPage,
+);
+routerAdmin.get(
+	'/chat/rooms',
+	coffeeshopController.verifyCoffeeShop,
+	chatController.getAllRooms,
+);
+routerAdmin.get(
+	'/chat/messages/:roomId',
+	coffeeshopController.verifyCoffeeShop,
+	chatController.getMessages,
+);
+routerAdmin.post(
+	'/chat/room/:roomId/close',
+	coffeeshopController.verifyCoffeeShop,
+	chatController.closeRoom,
+);
+
 export default routerAdmin;
+
