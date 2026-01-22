@@ -40,6 +40,11 @@ router.get(
 	memberController.retrieveAuth,
 	productController.getProduct,
 );
+router.post(
+	'/product/:id/like',
+	memberController.verifyAuth,
+	productController.likeTargetProduct,
+);
 
 /** Order **/
 router.post(
@@ -68,4 +73,3 @@ router.get('/chat/messages/:roomId', chatController.getMessages);
 router.post('/chat/ai', chatController.aiChat);
 
 export default router;
-

@@ -15,13 +15,17 @@ import { T } from '../libs/types/common';
 import { ViewInput } from '../libs/types/view';
 import { ViewGroup } from '../libs/enums/view.enum';
 import ViewService from './View.service';
+import { LikeGroup } from '../libs/enums/like.enum';
+import LikeService from './Like.service';
 
 class ProductService {
 	private readonly productModel;
 	public viewService;
+	public likeService;
 	constructor() {
 		this.productModel = ProductModel;
 		this.viewService = new ViewService();
+		this.likeService = new LikeService();
 	}
 
 	/** SPA */
@@ -91,6 +95,34 @@ class ProductService {
 					.exec();
 			}
 		}
+		return result;
+	}
+
+	public async likeTargetProduct(
+		memberId: ObjectId,
+		productId: ObjectId,
+	): Promise<Product> {
+		const product = await this.productModel.findOne({
+			_id: productId,
+			status: ProductStatus.PROCESS,
+		});
+
+		if (!product) {
+			throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+		}
+
+		const modifier = await this.likeService.toggleLike({
+			memberId,
+			likeRefId: productId,
+			likeGroup: LikeGroup.PRODUCT,
+		});
+
+		const result = await this.productModel.findByIdAndUpdate(
+			productId,
+			{ $inc: { productLikes: modifier } },
+			{ new: true },
+		);
+
 		return result;
 	}
 

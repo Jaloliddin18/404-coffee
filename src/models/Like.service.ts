@@ -31,3 +31,5 @@ class LikeService {
 		return modifier;
 	}
 }
+
+export default LikeService;
