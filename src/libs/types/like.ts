@@ -10,8 +10,14 @@ export interface Like {
 	updatedAt: Date;
 }
 
-export interface meLiked {
+export interface MeLiked {
 	memberId: ObjectId;
 	likeRefId: ObjectId;
 	myFavorite: boolean;
+}
+
+export interface LikeInput {
+	memberId: ObjectId;
+	likeRefId: ObjectId;
+	likeGroup: LikeGroup;
 }
