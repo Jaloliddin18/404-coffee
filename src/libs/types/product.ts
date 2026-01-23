@@ -51,3 +51,7 @@ export interface ProductInquiry {
 	productCollection?: ProductCollection;
 	search?: string;
 }
+export interface Products {
+	list: Product[];
+	metaCounter: { total: number }[];
+}

@@ -32,6 +32,11 @@ router.post(
 );
 
 router.get('/member/top-users', memberController.getTopUsers);
+router.get(
+	'/member/favorites',
+	memberController.verifyAuth,
+	memberController.getFavoriteProducts,
+);
 
 /** Product **/
 router.get('/product/all', productController.getProducts);

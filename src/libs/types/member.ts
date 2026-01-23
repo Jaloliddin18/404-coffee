@@ -47,6 +47,12 @@ export interface MemberUpdateInput {
 	memberImage?: string;
 }
 
+export interface MemberGetFavorite {
+	_id: ObjectId;
+	page: number;
+	limit: number;
+}
+
 export interface ExtendedRequest extends Request {
 	member: Member;
 	file: Express.Multer.File;

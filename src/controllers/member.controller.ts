@@ -5,6 +5,7 @@ import {
 	ExtendedRequest,
 	LoginInput,
 	Member,
+	MemberGetFavorite,
 	MemberInput,
 	MemberUpdateInput,
 } from '../libs/types/member';
@@ -110,6 +111,27 @@ memberController.getTopUsers = async (req: Request, res: Response) => {
 		res.status(HttpCode.OK).json(result);
 	} catch (err) {
 		console.log('Error, getTopUsers', err);
+		if (err instanceof Errors) res.status(err.code).json(err);
+		else res.status(Errors.standard.code).json(Errors.standard);
+	}
+};
+
+memberController.getFavoriteProducts = async (
+	req: ExtendedRequest,
+	res: Response,
+) => {
+	try {
+		console.log('getFavoriteProducts');
+		const input: MemberGetFavorite = {
+			_id: req.member._id,
+			page: Number(req.query.page) || 1,
+			limit: Number(req.query.limit) || 10,
+		};
+		const result = await memberService.getFavoriteProducts(input);
+
+		res.status(200).json(result);
+	} catch (err) {
+		console.log('Error, getFavoriteProducts', err);
 		if (err instanceof Errors) res.status(err.code).json(err);
 		else res.status(Errors.standard.code).json(Errors.standard);
 	}

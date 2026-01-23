@@ -2,19 +2,26 @@ import MemberModel from '../schema/Member.model';
 import {
 	LoginInput,
 	Member,
+	MemberGetFavorite,
 	MemberInput,
 	MemberUpdateInput,
 } from '../libs/types/member';
 import Errors, { Message } from '../libs/Error';
 import { HttpCode } from '../libs/Error';
 import { MemberStatus, MemberType } from '../libs/enums/member.enum';
-import { shapeIntoMongooseObjectId } from '../libs/config';
+import { lookupFavorite, shapeIntoMongooseObjectId } from '../libs/config';
 import * as bycript from 'bcryptjs';
+import { Products } from '../libs/types/product';
+import { T } from '../libs/types/common';
+import { LikeGroup } from '../libs/enums/like.enum';
+import LikeModel from '../schema/Like.model';
 
 class MemberService {
 	private readonly memberModel;
+	private readonly likeModel;
 	constructor() {
 		this.memberModel = MemberModel;
+		this.likeModel = LikeModel;
 	}
 	/** SPA */
 
@@ -98,6 +105,41 @@ class MemberService {
 			.limit(4)
 			.exec();
 		if (!result) throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
+		return result;
+	}
+
+	public async getFavoriteProducts(
+		input: MemberGetFavorite,
+	): Promise<Products> {
+		const { _id, page, limit } = input;
+		const memberId = shapeIntoMongooseObjectId(_id);
+		const match: T = { likeGroup: LikeGroup.PRODUCT, memberId: memberId };
+		const data = await this.likeModel.aggregate([
+			{ $match: match },
+			{ $sort: { updatedAt: -1 } },
+			{
+				$lookup: {
+					from: 'products',
+					localField: 'likeRefId',
+					foreignField: '_id',
+					as: 'favoriteProduct',
+				},
+			},
+			{ $unwind: '$favoriteProduct' },
+			{
+				$facet: {
+					list: [{ $skip: (page - 1) * limit }, { $limit: limit }],
+					metaCounter: [{ $count: 'total' }],
+				},
+			},
+		]);
+
+		const result: Products = {
+			list: [],
+			metaCounter: data[0].metaCounter,
+		};
+
+		result.list = data[0].list.map((ele: T) => ele.favoriteProduct);
 		return result;
 	}
 

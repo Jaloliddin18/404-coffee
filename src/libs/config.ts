@@ -7,5 +7,11 @@ export const shapeIntoMongooseObjectId = (target: any) => {
 		? new mongoose.Types.ObjectId(target)
 		: target;
 };
-
-
+export const lookupFavorite = {
+	$lookup: {
+		from: 'members',
+		localField: 'favoriteProduct.memberId',
+		foreignField: '_id',
+		as: 'favoriteProduct.memberData',
+	},
+};

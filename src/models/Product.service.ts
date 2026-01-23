@@ -104,7 +104,7 @@ class ProductService {
 	): Promise<Product> {
 		const product = await this.productModel.findOne({
 			_id: productId,
-			status: ProductStatus.PROCESS,
+			productStatus: ProductStatus.PROCESS,
 		});
 
 		if (!product) {

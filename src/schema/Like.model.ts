@@ -20,6 +20,6 @@ const likeSchema = new Schema(
 );
 
 // one user can like one product only once
-likeSchema.index({ memberId: 1, productId: 1 }, { unique: true });
+likeSchema.index({ memberId: 1, likeRefId: 1 }, { unique: true });
 
 export default mongoose.model('Like', likeSchema);
