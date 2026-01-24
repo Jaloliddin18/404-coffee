@@ -30,6 +30,12 @@ class LikeService {
 		console.log(`- Like modifier ${modifier} -`);
 		return modifier;
 	}
+
+	public async checkLikeExistence(input: LikeInput): Promise<boolean> {
+		const search = { memberId: input.memberId, likeRefId: input.likeRefId };
+		const exist = await this.likeModel.findOne(search).exec();
+		return !!exist;
+	}
 }
 
 export default LikeService;

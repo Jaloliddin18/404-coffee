@@ -67,6 +67,7 @@ class ProductService {
 
 		let result = await this.productModel
 			.findOne({ _id: productId, productStatus: ProductStatus.PROCESS })
+			.lean()
 			.exec();
 		if (!result) throw new Errors(HttpCode.NOT_FOUND, Message.NO_DATA_FOUND);
 
@@ -92,8 +93,18 @@ class ProductService {
 						{ $inc: { productViews: +1 } },
 						{ new: true },
 					)
+					.lean()
 					.exec();
 			}
+
+			// Check if user has liked this product
+			const likeInput = {
+				memberId: memberId,
+				likeRefId: productId,
+				likeGroup: LikeGroup.PRODUCT,
+			};
+			const existLike = await this.likeService.checkLikeExistence(likeInput);
+			(result as any).meLiked = !!existLike;
 		}
 		return result;
 	}
