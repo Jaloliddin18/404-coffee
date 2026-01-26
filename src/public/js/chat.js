@@ -21,7 +21,7 @@ socket.emit('admin:join', { adminId });
 socket.on('admin:rooms', (data) => {
 	chatRooms = data.rooms;
 	// Initialize unread counts
-	chatRooms.forEach(room => {
+	chatRooms.forEach((room) => {
 		if (!unreadCounts[room._id]) {
 			unreadCounts[room._id] = 0;
 		}
@@ -51,11 +51,15 @@ socket.on('message:receive', (data) => {
 		appendMessage(data.message);
 		// Mark as seen since we're viewing this room
 		if (data.message.senderType === 'USER') {
-			socket.emit('message:mark-seen', { roomId: currentRoomId, viewerType: 'ADMIN' });
+			socket.emit('message:mark-seen', {
+				roomId: currentRoomId,
+				viewerType: 'ADMIN',
+			});
 		}
 	} else if (data.message.senderType === 'USER') {
 		// Increment unread count for other rooms
-		unreadCounts[data.message.roomId] = (unreadCounts[data.message.roomId] || 0) + 1;
+		unreadCounts[data.message.roomId] =
+			(unreadCounts[data.message.roomId] || 0) + 1;
 		playNotificationSound();
 	}
 	// Update last message in chat list
@@ -105,7 +109,7 @@ socket.on('error', (data) => {
 socket.on('member:status-updated', (data) => {
 	const { memberId, memberStatus } = data;
 	// Update all rooms belonging to this member
-	chatRooms.forEach(room => {
+	chatRooms.forEach((room) => {
 		if (room.memberId === memberId) {
 			room.memberStatus = memberStatus;
 		}
@@ -118,7 +122,9 @@ socket.on('member:status-updated', (data) => {
 function playNotificationSound() {
 	// Simple beep notification
 	try {
-		const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+		const audioContext = new (
+			window.AudioContext || window.webkitAudioContext
+		)();
 		const oscillator = audioContext.createOscillator();
 		const gainNode = audioContext.createGain();
 		oscillator.connect(gainNode);
@@ -126,7 +132,10 @@ function playNotificationSound() {
 		oscillator.frequency.value = 800;
 		oscillator.type = 'sine';
 		gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-		gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+		gainNode.gain.exponentialRampToValueAtTime(
+			0.01,
+			audioContext.currentTime + 0.3,
+		);
 		oscillator.start(audioContext.currentTime);
 		oscillator.stop(audioContext.currentTime + 0.3);
 	} catch (e) {
@@ -143,12 +152,17 @@ function renderChatList() {
 	}
 
 	const pendingCount = chatRooms.filter((r) => r.status === 'PENDING').length;
-	const totalUnread = Object.values(unreadCounts).reduce((sum, count) => sum + count, 0);
+	const totalUnread = Object.values(unreadCounts).reduce(
+		(sum, count) => sum + count,
+		0,
+	);
 	pendingCountEl.textContent = totalUnread > 0 ? totalUnread : pendingCount;
 
 	chatListEl.innerHTML = chatRooms
 		.map((room) => {
-			const initial = room.memberNick ? room.memberNick.charAt(0).toUpperCase() : '?';
+			const initial = room.memberNick
+				? room.memberNick.charAt(0).toUpperCase()
+				: '?';
 			const isActive = room._id === currentRoomId;
 			const isPending = room.status === 'PENDING';
 			const isBlocked = room.memberStatus === 'BLOCK';
@@ -235,10 +249,12 @@ function renderMessages(messages) {
 				hour: '2-digit',
 				minute: '2-digit',
 			});
-			
+
 			// Read status ticks for admin messages
-			const readStatus = isAdmin ? 
-				(msg.seen ? '<span class="read-status seen">✓✓</span>' : '<span class="read-status">✓</span>') 
+			const readStatus = isAdmin
+				? msg.seen
+					? '<span class="read-status seen">✓✓</span>'
+					: '<span class="read-status">✓</span>'
 				: '';
 
 			return `
@@ -271,7 +287,7 @@ function appendMessage(message) {
 		hour: '2-digit',
 		minute: '2-digit',
 	});
-	
+
 	const readStatus = isAdmin ? '<span class="read-status">✓</span>' : '';
 
 	const messageHtml = `
@@ -293,8 +309,10 @@ function appendMessage(message) {
 
 // Update seen status to double ticks
 function updateMessageSeenStatus() {
-	const singleTicks = messagesContainerEl.querySelectorAll('.read-status:not(.seen)');
-	singleTicks.forEach(tick => {
+	const singleTicks = messagesContainerEl.querySelectorAll(
+		'.read-status:not(.seen)',
+	);
+	singleTicks.forEach((tick) => {
 		tick.textContent = '✓✓';
 		tick.classList.add('seen');
 	});

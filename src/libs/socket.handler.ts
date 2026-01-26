@@ -18,33 +18,36 @@ export function initializeSocket(io: Server): void {
 		console.log('New socket connection:', socket.id);
 
 		// User joins their chat room
-		socket.on('user:join', async (data: { memberId: string; memberNick: string }) => {
-			try {
-				const { memberId, memberNick } = data;
-				connectedUsers.set(memberId, socket.id);
+		socket.on(
+			'user:join',
+			async (data: { memberId: string; memberNick: string }) => {
+				try {
+					const { memberId, memberNick } = data;
+					connectedUsers.set(memberId, socket.id);
 
-				// Get or create room for user
-				const room = await chatService.getOrCreateRoom({
-					memberId: shapeIntoMongooseObjectId(memberId),
-					memberNick,
-				});
+					// Get or create room for user
+					const room = await chatService.getOrCreateRoom({
+						memberId: shapeIntoMongooseObjectId(memberId),
+						memberNick,
+					});
 
-				socket.join(`room:${room._id}`);
-				socket.emit('room:joined', { room });
+					socket.join(`room:${room._id}`);
+					socket.emit('room:joined', { room });
 
-				// Get existing messages
-				const messages = await chatService.getMessages(room._id);
-				socket.emit('messages:history', { messages });
+					// Get existing messages
+					const messages = await chatService.getMessages(room._id);
+					socket.emit('messages:history', { messages });
 
-				// Notify admins about new/existing chat
-				io.emit('admin:new-chat', { room });
+					// Notify admins about new/existing chat
+					io.emit('admin:new-chat', { room });
 
-				console.log(`User ${memberNick} joined room ${room._id}`);
-			} catch (error) {
-				console.error('Error in user:join:', error);
-				socket.emit('error', { message: 'Failed to join chat room' });
-			}
-		});
+					console.log(`User ${memberNick} joined room ${room._id}`);
+				} catch (error) {
+					console.error('Error in user:join:', error);
+					socket.emit('error', { message: 'Failed to join chat room' });
+				}
+			},
+		);
 
 		// Admin joins to manage chats
 		socket.on('admin:join', async (data: { adminId: string }) => {
@@ -60,10 +63,10 @@ export function initializeSocket(io: Server): void {
 				socket.emit('admin:rooms', { rooms });
 
 				// Broadcast admin online status to all users
-				io.emit('admin:status', { 
-					isOnline: connectedAdmins.size > 0, 
+				io.emit('admin:status', {
+					isOnline: connectedAdmins.size > 0,
 					adminCount: connectedAdmins.size,
-					lastSeen: new Date()
+					lastSeen: new Date(),
 				});
 
 				console.log(`Admin ${adminId} connected`);
@@ -74,123 +77,158 @@ export function initializeSocket(io: Server): void {
 		});
 
 		// Admin accepts a chat
-		socket.on('admin:accept-chat', async (data: { roomId: string; adminId: string }) => {
-			try {
-				const { roomId, adminId } = data;
+		socket.on(
+			'admin:accept-chat',
+			async (data: { roomId: string; adminId: string }) => {
+				try {
+					const { roomId, adminId } = data;
 
-				const room = await chatService.updateRoomStatus(
-					shapeIntoMongooseObjectId(roomId),
-					ChatRoomStatus.ACTIVE,
-					shapeIntoMongooseObjectId(adminId),
-				);
+					const room = await chatService.updateRoomStatus(
+						shapeIntoMongooseObjectId(roomId),
+						ChatRoomStatus.ACTIVE,
+						shapeIntoMongooseObjectId(adminId),
+					);
 
-				if (room) {
-					socket.join(`room:${roomId}`);
-					io.to(`room:${roomId}`).emit('room:status-updated', { room });
+					if (room) {
+						socket.join(`room:${roomId}`);
+						io.to(`room:${roomId}`).emit('room:status-updated', { room });
 
-					// Mark user messages as seen by admin
-					await chatService.markMessagesAsSeen(shapeIntoMongooseObjectId(roomId), 'ADMIN');
+						// Mark user messages as seen by admin
+						await chatService.markMessagesAsSeen(
+							shapeIntoMongooseObjectId(roomId),
+							'ADMIN',
+						);
 
-					// Get messages for this room (with updated seen status)
-					const messages = await chatService.getMessages(room._id);
-					socket.emit('messages:history', { messages });
+						// Get messages for this room (with updated seen status)
+						const messages = await chatService.getMessages(room._id);
+						socket.emit('messages:history', { messages });
 
-					// Notify user that their messages were seen
-					io.to(`room:${roomId}`).emit('messages:seen', { 
-						roomId, 
-						seenBy: 'ADMIN',
-						seenAt: new Date() 
-					});
+						// Notify user that their messages were seen
+						io.to(`room:${roomId}`).emit('messages:seen', {
+							roomId,
+							seenBy: 'ADMIN',
+							seenAt: new Date(),
+						});
+					}
+
+					console.log(`Admin ${adminId} accepted chat ${roomId}`);
+				} catch (error) {
+					console.error('Error in admin:accept-chat:', error);
+					socket.emit('error', { message: 'Failed to accept chat' });
 				}
-
-				console.log(`Admin ${adminId} accepted chat ${roomId}`);
-			} catch (error) {
-				console.error('Error in admin:accept-chat:', error);
-				socket.emit('error', { message: 'Failed to accept chat' });
-			}
-		});
+			},
+		);
 
 		// Send message (user or admin)
-		socket.on('message:send', async (data: {
-			roomId: string;
-			senderId: string;
-			senderType: MessageSenderType;
-			senderNick: string;
-			content: string;
-		}) => {
-			try {
-				const { roomId, senderId, senderType, senderNick, content } = data;
+		socket.on(
+			'message:send',
+			async (data: {
+				roomId: string;
+				senderId: string;
+				senderType: MessageSenderType;
+				senderNick: string;
+				content: string;
+			}) => {
+				try {
+					const { roomId, senderId, senderType, senderNick, content } = data;
 
-				const message = await chatService.saveMessage({
-					roomId: shapeIntoMongooseObjectId(roomId),
-					senderId: shapeIntoMongooseObjectId(senderId),
-					senderType,
-					senderNick,
-					content,
-				});
+					// Check if room is still active before saving message
+					const room = await chatService.getRoomById(
+						shapeIntoMongooseObjectId(roomId),
+					);
+					if (!room || room.status === ChatRoomStatus.CLOSED) {
+						socket.emit('room:closed', {
+							room,
+							message:
+								'This chat has been closed. Please start a new conversation.',
+						});
+						return;
+					}
 
-				// Broadcast message to room
-				io.to(`room:${roomId}`).emit('message:receive', { message });
+					const message = await chatService.saveMessage({
+						roomId: shapeIntoMongooseObjectId(roomId),
+						senderId: shapeIntoMongooseObjectId(senderId),
+						senderType,
+						senderNick,
+						content,
+					});
 
-				// Also update admin list
-				io.to('admin-room').emit('admin:message-received', {
-					roomId,
-					message,
-				});
+					// Broadcast message to room
+					io.to(`room:${roomId}`).emit('message:receive', { message });
 
-				console.log(`Message sent in room ${roomId} by ${senderNick}`);
-			} catch (error) {
-				console.error('Error in message:send:', error);
-				socket.emit('error', { message: 'Failed to send message' });
-			}
-		});
+					// Also update admin list
+					io.to('admin-room').emit('admin:message-received', {
+						roomId,
+						message,
+					});
+
+					console.log(`Message sent in room ${roomId} by ${senderNick}`);
+				} catch (error) {
+					console.error('Error in message:send:', error);
+					socket.emit('error', { message: 'Failed to send message' });
+				}
+			},
+		);
 
 		// Mark messages as seen
-		socket.on('message:mark-seen', async (data: { roomId: string; viewerType: string }) => {
-			try {
-				const { roomId, viewerType } = data;
-				
-				await chatService.markMessagesAsSeen(shapeIntoMongooseObjectId(roomId), viewerType);
-				
-				// Notify the other party that their messages were seen
-				io.to(`room:${roomId}`).emit('messages:seen', { 
-					roomId, 
-					seenBy: viewerType,
-					seenAt: new Date() 
-				});
-				
-				console.log(`Messages in room ${roomId} marked as seen by ${viewerType}`);
-			} catch (error) {
-				console.error('Error in message:mark-seen:', error);
-			}
-		});
+		socket.on(
+			'message:mark-seen',
+			async (data: { roomId: string; viewerType: string }) => {
+				try {
+					const { roomId, viewerType } = data;
+
+					await chatService.markMessagesAsSeen(
+						shapeIntoMongooseObjectId(roomId),
+						viewerType,
+					);
+
+					// Notify the other party that their messages were seen
+					io.to(`room:${roomId}`).emit('messages:seen', {
+						roomId,
+						seenBy: viewerType,
+						seenAt: new Date(),
+					});
+
+					console.log(
+						`Messages in room ${roomId} marked as seen by ${viewerType}`,
+					);
+				} catch (error) {
+					console.error('Error in message:mark-seen:', error);
+				}
+			},
+		);
 
 		// AI Chat message
-		socket.on('ai:chat', async (data: { message: string; memberId?: string }) => {
-			try {
-				const { message, memberId } = data;
+		socket.on(
+			'ai:chat',
+			async (data: { message: string; memberId?: string }) => {
+				try {
+					const { message, memberId } = data;
 
-				// Get AI response
-				const aiResponse = await chatService.getAIResponse(message);
+					// Get AI response
+					const aiResponse = await chatService.getAIResponse(message);
 
-				socket.emit('ai:response', {
-					userMessage: message,
-					aiResponse,
-					timestamp: new Date(),
-				});
+					socket.emit('ai:response', {
+						userMessage: message,
+						aiResponse,
+						timestamp: new Date(),
+					});
 
-				console.log('AI chat processed for:', memberId || 'anonymous');
-			} catch (error) {
-				console.error('Error in ai:chat:', error);
-				socket.emit('error', { message: 'Failed to get AI response' });
-			}
-		});
+					console.log('AI chat processed for:', memberId || 'anonymous');
+				} catch (error) {
+					console.error('Error in ai:chat:', error);
+					socket.emit('error', { message: 'Failed to get AI response' });
+				}
+			},
+		);
 
 		// Close chat room
 		socket.on('room:close', async (data: { roomId: string }) => {
 			try {
 				const { roomId } = data;
-				const room = await chatService.closeRoom(shapeIntoMongooseObjectId(roomId));
+				const room = await chatService.closeRoom(
+					shapeIntoMongooseObjectId(roomId),
+				);
 
 				if (room) {
 					io.to(`room:${roomId}`).emit('room:closed', { room });
@@ -218,12 +256,12 @@ export function initializeSocket(io: Server): void {
 					connectedAdmins.delete(adminId);
 					adminActiveRooms.delete(adminId);
 					adminLastSeen.set(adminId, new Date());
-					
+
 					// Broadcast admin offline status
-					ioInstance.emit('admin:status', { 
-						isOnline: connectedAdmins.size > 0, 
+					ioInstance.emit('admin:status', {
+						isOnline: connectedAdmins.size > 0,
 						adminCount: connectedAdmins.size,
-						lastSeen: new Date()
+						lastSeen: new Date(),
 					});
 					break;
 				}
@@ -236,13 +274,18 @@ export function initializeSocket(io: Server): void {
 }
 
 /** Broadcast member status update to all admins viewing the chat page */
-export function broadcastMemberStatusUpdate(memberId: string, memberStatus: string): void {
+export function broadcastMemberStatusUpdate(
+	memberId: string,
+	memberStatus: string,
+): void {
 	if (ioInstance) {
 		ioInstance.to('admin-room').emit('member:status-updated', {
 			memberId,
 			memberStatus,
 		});
-		console.log(`Broadcasted member status update: ${memberId} -> ${memberStatus}`);
+		console.log(
+			`Broadcasted member status update: ${memberId} -> ${memberStatus}`,
+		);
 	}
 }
 
