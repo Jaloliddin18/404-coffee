@@ -38,8 +38,7 @@ export function initializeSocket(io: Server): void {
 					const messages = await chatService.getMessages(room._id);
 					socket.emit('messages:history', { messages });
 
-					// Notify admins about new/existing chat
-					io.emit('admin:new-chat', { room });
+					// Note: Admin is NOT notified here - chat will appear to admin only when user sends first message
 
 					console.log(`User ${memberNick} joined room ${room._id}`);
 				} catch (error) {
@@ -58,8 +57,8 @@ export function initializeSocket(io: Server): void {
 				adminLastSeen.set(adminId, new Date());
 				socket.join('admin-room');
 
-				// Get all active chat rooms
-				const rooms = await chatService.getAllRooms();
+				// Get all active chat rooms with unread counts
+				const rooms = await chatService.getAllRoomsWithUnreadCounts();
 				socket.emit('admin:rooms', { rooms });
 
 				// Broadcast admin online status to all users
@@ -156,10 +155,30 @@ export function initializeSocket(io: Server): void {
 					// Broadcast message to room
 					io.to(`room:${roomId}`).emit('message:receive', { message });
 
-					// Also update admin list
+					// Get updated unread count for this room
+					const unreadCount = await chatService.getUnreadCount(
+						shapeIntoMongooseObjectId(roomId),
+					);
+
+					// If this is the first message from a user (room was PENDING), notify admins about new chat
+					if (
+						room.status === ChatRoomStatus.PENDING &&
+						senderType === MessageSenderType.USER
+					) {
+						const roomData = (room as any).toObject
+							? (room as any).toObject()
+							: room;
+						const roomWithUnread = { ...roomData, unreadCount };
+						io.to('admin-room').emit('admin:new-chat', {
+							room: roomWithUnread,
+						});
+					}
+
+					// Also update admin list with unread count
 					io.to('admin-room').emit('admin:message-received', {
 						roomId,
 						message,
+						unreadCount,
 					});
 
 					console.log(`Message sent in room ${roomId} by ${senderNick}`);

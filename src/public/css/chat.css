@@ -65,44 +65,44 @@
 	margin-bottom: 30px;
 }
 
-/* Chat Layout */
+/* Chat Layout - White theme matching other admin pages */
 .chat-layout {
 	display: flex;
 	width: 100%;
 	height: 600px;
-	background: rgba(255, 255, 255, 0.1);
-	border-radius: 16px;
+	background: #ffffff;
+	border-radius: 8px;
 	overflow: hidden;
-	backdrop-filter: blur(10px);
-	border: 1px solid rgba(255, 255, 255, 0.2);
+	border: 1px solid #dddddd;
+	box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
 }
 
-/* Sidebar */
+/* Sidebar - Light theme */
 .chat-sidebar {
 	width: 320px;
-	background: rgba(0, 0, 0, 0.2);
+	background: #f7f7f7;
 	display: flex;
 	flex-direction: column;
-	border-right: 1px solid rgba(255, 255, 255, 0.1);
+	border-right: 1px solid #dddddd;
 }
 
 .sidebar-header {
 	padding: 20px;
-	background: rgba(0, 0, 0, 0.2);
+	background: #ffffff;
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	color: #ffffff;
+	color: #4f547b;
 	font-weight: 600;
 	font-size: 16px;
-	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	border-bottom: 1px solid #dddddd;
 }
 
 .sidebar-header .badge {
 	background: #e37813;
 	color: white;
 	padding: 5px 12px;
-	border-radius: 20px;
+	border-radius: 12px;
 	font-size: 0.8rem;
 }
 
@@ -114,26 +114,31 @@
 
 .chat-item {
 	padding: 15px;
-	border-radius: 10px;
+	border-radius: 8px;
 	margin-bottom: 8px;
 	cursor: pointer;
-	transition: all 0.3s ease;
-	background: rgba(255, 255, 255, 0.05);
-	border: 1px solid transparent;
+	transition: background 0.2s ease;
+	background: #ffffff;
+	border: 1px solid #dddddd;
 }
 
 .chat-item:hover {
-	background: rgba(255, 255, 255, 0.1);
-	transform: translateX(5px);
+	background: #f0f0f0;
+	border-color: #cccccc;
 }
 
 .chat-item.active {
-	background: rgba(227, 120, 19, 0.3);
+	background: #fff8f0;
 	border-color: #e37813;
 }
 
+.chat-item.has-unread {
+	border-left: 3px solid #e37813;
+}
+
 .chat-item.pending {
-	border-left: 3px solid #ffd700;
+	border-left: 3px solid #ffc107;
+	background: #fffef0;
 }
 
 .chat-item .user-info {
@@ -146,7 +151,7 @@
 	width: 45px;
 	height: 45px;
 	border-radius: 50%;
-	background: linear-gradient(135deg, #e37813 0%, #c26210 100%);
+	background: #e37813;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -160,13 +165,16 @@
 }
 
 .chat-item .user-name {
-	color: #fff;
+	color: #333333;
 	font-weight: 600;
 	margin-bottom: 4px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
 }
 
 .chat-item .last-message {
-	color: rgba(255, 255, 255, 0.5);
+	color: #888888;
 	font-size: 0.85rem;
 	white-space: nowrap;
 	overflow: hidden;
@@ -174,47 +182,51 @@
 	max-width: 160px;
 }
 
-.chat-item .status-badge {
-	font-size: 0.7rem;
-	padding: 3px 8px;
-	border-radius: 10px;
+/* Unread Count Badge - Primary indicator */
+.unread-count {
+	background: #e37813;
+	color: white;
+	font-size: 0.75rem;
+	font-weight: bold;
+	padding: 4px 10px;
+	border-radius: 12px;
+	min-width: 24px;
+	text-align: center;
+}
+
+/* Member Status Badge (only for blocked users) */
+.member-status-badge {
+	font-size: 0.6rem;
+	padding: 2px 6px;
+	border-radius: 4px;
 	text-transform: uppercase;
+	font-weight: bold;
 }
 
-.chat-item .status-badge.pending {
-	background: rgba(255, 215, 0, 0.2);
-	color: #ffd700;
-}
-
-.chat-item .status-badge.active {
-	background: rgba(0, 255, 0, 0.2);
-	color: #00ff00;
-}
-
-.chat-item .status-badge.block {
-	background: rgba(255, 68, 68, 0.3);
-	color: #ff4444;
+.member-status-badge.block {
+	background: #ff4444;
+	color: #fff;
 }
 
 .no-chats {
 	text-align: center;
 	padding: 40px 20px;
-	color: rgba(255, 255, 255, 0.5);
+	color: #888888;
 }
 
-/* Main Chat Area */
+/* Main Chat Area - Light theme */
 .chat-main {
 	flex: 1;
 	display: flex;
 	flex-direction: column;
-	background: rgba(0, 0, 0, 0.1);
+	background: #ffffff;
 }
 
 .chat-header {
 	padding: 20px;
-	background: rgba(0, 0, 0, 0.2);
-	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-	color: #ffffff;
+	background: #f7f7f7;
+	border-bottom: 1px solid #dddddd;
+	color: #333333;
 	font-weight: 500;
 }
 
@@ -222,10 +234,16 @@
 	font-size: 16px;
 }
 
+.chat-header h4 {
+	margin: 0;
+	color: #333333;
+}
+
 .messages-container {
 	flex: 1;
 	overflow-y: auto;
 	padding: 20px;
+	background: #fafafa;
 }
 
 .no-messages {
@@ -237,7 +255,7 @@
 
 .empty-state {
 	text-align: center;
-	color: rgba(255, 255, 255, 0.5);
+	color: #888888;
 }
 
 .empty-state .icon {
@@ -246,7 +264,7 @@
 	display: block;
 }
 
-/* Messages */
+/* Messages - Light theme */
 .message {
 	margin-bottom: 15px;
 	display: flex;
@@ -264,31 +282,36 @@
 .message .bubble {
 	max-width: 70%;
 	padding: 12px 18px;
-	border-radius: 18px;
+	border-radius: 12px;
 	position: relative;
 }
 
 .message.user .bubble {
-	background: rgba(255, 255, 255, 0.15);
-	color: #fff;
+	background: #f0f0f0;
+	color: #333333;
+	border: 1px solid #dddddd;
 	border-bottom-left-radius: 4px;
 }
 
 .message.admin .bubble {
-	background: linear-gradient(135deg, #e37813 0%, #c26210 100%);
-	color: #fff;
+	background: #f0f0f0;
+	color: #333333;
 	border-bottom-right-radius: 4px;
 }
 
 .message .sender-name {
 	font-size: 0.75rem;
-	color: rgba(255, 255, 255, 0.5);
+	color: #888888;
 	margin-bottom: 4px;
 }
 
 .message .timestamp {
 	font-size: 0.7rem;
-	color: rgba(255, 255, 255, 0.4);
+	color: #aaaaaa;
+}
+
+.message.admin .timestamp {
+	color: aaaaaa(255, 255, 255, 0.7);
 }
 
 /* Message Meta */
@@ -303,30 +326,18 @@
 /* Read Status Ticks */
 .read-status {
 	font-size: 0.8rem;
-	color: rgba(255, 255, 255, 0.5);
+	color: #aaaaaa;
 }
 
 .read-status.seen {
 	color: #4fc3f7;
 }
 
-/* Unread Badge */
-.unread-badge {
-	background: #ff4444;
-	color: white;
-	font-size: 0.7rem;
-	font-weight: bold;
-	padding: 3px 8px;
-	border-radius: 12px;
-	min-width: 20px;
-	text-align: center;
-}
-
-/* Chat Input */
+/* Chat Input - Light theme */
 .chat-input-container {
 	padding: 20px;
-	background: rgba(0, 0, 0, 0.2);
-	border-top: 1px solid rgba(255, 255, 255, 0.1);
+	background: #f7f7f7;
+	border-top: 1px solid #dddddd;
 }
 
 #message-form {
@@ -337,41 +348,41 @@
 #message-input {
 	flex: 1;
 	padding: 15px 20px;
-	border: none;
-	border-radius: 25px;
-	background: rgba(255, 255, 255, 0.1);
-	color: #fff;
+	border: 1px solid #dddddd;
+	border-radius: 8px;
+	background: #ffffff;
+	color: #333333;
 	font-size: 1rem;
 	outline: none;
-	transition: all 0.3s ease;
+	transition: border-color 0.2s ease;
+	font-family: 'GT Walsheim Pro', sans-serif;
 }
 
 #message-input::placeholder {
-	color: rgba(255, 255, 255, 0.5);
+	color: #999999;
 }
 
 #message-input:focus {
-	background: rgba(255, 255, 255, 0.15);
-	box-shadow: 0 0 0 2px rgba(227, 120, 19, 0.5);
+	border-color: #e37813;
+	box-shadow: 0 0 0 2px rgba(227, 120, 19, 0.1);
 }
 
 .send-btn {
 	padding: 15px 30px;
 	border: none;
-	border-radius: 25px;
-	background: linear-gradient(135deg, #e37813 0%, #c26210 100%);
-	color: #fff;
+	border-radius: 8px;
+	background: #e37813;
+	color: #ffffff;
 	font-weight: 600;
 	cursor: pointer;
-	transition: all 0.3s ease;
+	transition: background 0.2s ease;
 }
 
 .send-btn:hover {
-	transform: scale(1.05);
-	box-shadow: 0 5px 20px rgba(227, 120, 19, 0.4);
+	background: #c26210;
 }
 
-/* Scrollbar */
+/* Scrollbar - Light theme */
 .chat-list::-webkit-scrollbar,
 .messages-container::-webkit-scrollbar {
 	width: 6px;
@@ -379,13 +390,18 @@
 
 .chat-list::-webkit-scrollbar-track,
 .messages-container::-webkit-scrollbar-track {
-	background: transparent;
+	background: #f0f0f0;
 }
 
 .chat-list::-webkit-scrollbar-thumb,
 .messages-container::-webkit-scrollbar-thumb {
-	background: rgba(255, 255, 255, 0.2);
+	background: #cccccc;
 	border-radius: 3px;
+}
+
+.chat-list::-webkit-scrollbar-thumb:hover,
+.messages-container::-webkit-scrollbar-thumb:hover {
+	background: #aaaaaa;
 }
 
 /* Responsive */
@@ -418,24 +434,5 @@
 }
 
 .chat-item .avatar.blocked {
-	background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
-}
-
-.member-status-badge {
-	font-size: 0.6rem;
-	padding: 2px 6px;
-	border-radius: 8px;
-	margin-left: 6px;
-	text-transform: uppercase;
-	font-weight: bold;
-}
-
-.member-status-badge.block {
-	background: rgba(255, 68, 68, 0.3);
-	color: #ff4444;
-}
-
-.member-status-badge.active {
-	background: rgba(0, 255, 0, 0.2);
-	color: #00ff00;
+	background: #ff4444;
 }

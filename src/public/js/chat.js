@@ -36,7 +36,6 @@ socket.on('admin:new-chat', (data) => {
 		chatRooms.unshift(data.room);
 		unreadCounts[data.room._id] = 1; // New chat = 1 unread
 		renderChatList();
-		playNotificationSound();
 	}
 });
 
@@ -60,7 +59,6 @@ socket.on('message:receive', (data) => {
 		// Increment unread count for other rooms
 		unreadCounts[data.message.roomId] =
 			(unreadCounts[data.message.roomId] || 0) + 1;
-		playNotificationSound();
 	}
 	// Update last message in chat list
 	updateChatListItem(data.message.roomId, data.message.content);
@@ -69,6 +67,14 @@ socket.on('message:receive', (data) => {
 // Handle admin message received (for updating sidebar)
 socket.on('admin:message-received', (data) => {
 	updateChatListItem(data.roomId, data.message.content);
+	// Update the server-provided unread count
+	if (data.unreadCount !== undefined) {
+		const room = chatRooms.find((r) => r._id === data.roomId);
+		if (room) {
+			room.unreadCount = data.unreadCount;
+			renderChatList();
+		}
+	}
 });
 
 // Handle messages seen by user
@@ -118,45 +124,28 @@ socket.on('member:status-updated', (data) => {
 	console.log(`Member ${memberId} status updated to ${memberStatus}`);
 });
 
-// Play notification sound
-function playNotificationSound() {
-	// Simple beep notification
-	try {
-		const audioContext = new (
-			window.AudioContext || window.webkitAudioContext
-		)();
-		const oscillator = audioContext.createOscillator();
-		const gainNode = audioContext.createGain();
-		oscillator.connect(gainNode);
-		gainNode.connect(audioContext.destination);
-		oscillator.frequency.value = 800;
-		oscillator.type = 'sine';
-		gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-		gainNode.gain.exponentialRampToValueAtTime(
-			0.01,
-			audioContext.currentTime + 0.3,
-		);
-		oscillator.start(audioContext.currentTime);
-		oscillator.stop(audioContext.currentTime + 0.3);
-	} catch (e) {
-		console.log('Audio notification not supported');
-	}
-}
-
 // Render chat list
 function renderChatList() {
 	if (chatRooms.length === 0) {
 		chatListEl.innerHTML = '<div class="no-chats"><p>No active chats</p></div>';
-		pendingCountEl.textContent = '0';
+		pendingCountEl.textContent = '';
+		pendingCountEl.style.display = 'none';
 		return;
 	}
 
-	const pendingCount = chatRooms.filter((r) => r.status === 'PENDING').length;
-	const totalUnread = Object.values(unreadCounts).reduce(
-		(sum, count) => sum + count,
-		0,
-	);
-	pendingCountEl.textContent = totalUnread > 0 ? totalUnread : pendingCount;
+	// Count pending chat requests (rooms with PENDING status that admin hasn't opened)
+	const pendingChatRequests = chatRooms.filter(
+		(r) => r.status === 'PENDING',
+	).length;
+
+	// Only show badge if there are pending requests
+	if (pendingChatRequests > 0) {
+		pendingCountEl.textContent = pendingChatRequests;
+		pendingCountEl.style.display = '';
+	} else {
+		pendingCountEl.textContent = '';
+		pendingCountEl.style.display = 'none';
+	}
 
 	chatListEl.innerHTML = chatRooms
 		.map((room) => {
@@ -164,25 +153,24 @@ function renderChatList() {
 				? room.memberNick.charAt(0).toUpperCase()
 				: '?';
 			const isActive = room._id === currentRoomId;
-			const isPending = room.status === 'PENDING';
 			const isBlocked = room.memberStatus === 'BLOCK';
-			const unread = unreadCounts[room._id] || 0;
+			const isPending = room.status === 'PENDING';
 
-			// Show BLOCK status when user is blocked, otherwise show room status
-			const displayStatus = isBlocked ? 'BLOCK' : room.status;
-			const statusClass = isBlocked ? 'block' : room.status.toLowerCase();
+			// Get unread count - prefer server-provided, fallback to local tracking
+			const serverUnread = room.unreadCount || 0;
+			const localUnread = unreadCounts[room._id] || 0;
+			const unread = Math.max(serverUnread, localUnread);
 
 			return `
-				<div class="chat-item ${isActive ? 'active' : ''} ${isPending ? 'pending' : ''} ${isBlocked ? 'blocked' : ''}" 
+				<div class="chat-item ${isActive ? 'active' : ''} ${unread > 0 ? 'has-unread' : ''} ${isPending ? 'pending' : ''} ${isBlocked ? 'blocked' : ''}" 
 					 onclick="selectChat('${room._id}')">
 					<div class="user-info">
 						<div class="avatar ${isBlocked ? 'blocked' : ''}">${initial}</div>
 						<div class="user-details">
-							<div class="user-name">${room.memberNick || 'Unknown User'}</div>
+							<div class="user-name">${room.memberNick || 'Unknown User'}${isBlocked ? '<span class="member-status-badge block">BLOCKED</span>' : ''}</div>
 							<div class="last-message">${room.lastMessage || 'No messages yet'}</div>
 						</div>
-						${unread > 0 ? `<span class="unread-badge">${unread > 9 ? '9+' : unread}</span>` : ''}
-						<span class="status-badge ${statusClass}">${displayStatus}</span>
+						${unread > 0 ? `<span class="unread-count">${unread > 99 ? '99+' : unread}</span>` : ''}
 					</div>
 				</div>
 			`;

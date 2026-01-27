@@ -10,14 +10,11 @@ import {
 } from '../libs/types/chat';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-
 class ChatService {
 	private genAI: GoogleGenerativeAI;
 
 	constructor() {
-		this.genAI = new GoogleGenerativeAI(
-			process.env.GEMINI_API_KEY || '',
-		);
+		this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 	}
 
 	/** Create or get existing chat room for a user */
@@ -50,6 +47,31 @@ class ChatService {
 		return rooms;
 	}
 
+	/** Get unread message count for a room (messages from USER that are not seen) */
+	public async getUnreadCount(roomId: ObjectId): Promise<number> {
+		const count = await MessageModel.countDocuments({
+			roomId,
+			senderType: 'USER',
+			seen: false,
+		}).exec();
+		return count;
+	}
+
+	/** Get all rooms with their unread counts */
+	public async getAllRoomsWithUnreadCounts(): Promise<
+		Array<ChatRoom & { unreadCount: number }>
+	> {
+		const rooms = await this.getAllRooms();
+		const roomsWithCounts = await Promise.all(
+			rooms.map(async (room: any) => {
+				const unreadCount = await this.getUnreadCount(room._id);
+				const roomData = room.toObject ? room.toObject() : room;
+				return { ...roomData, unreadCount };
+			}),
+		);
+		return roomsWithCounts;
+	}
+
 	/** Get chat room by ID */
 	public async getRoomById(roomId: ObjectId): Promise<ChatRoom | null> {
 		const room = await ChatRoomModel.findById(roomId).exec();
@@ -65,11 +87,9 @@ class ChatService {
 		const updateData: any = { status };
 		if (adminId) updateData.adminId = adminId;
 
-		const room = await ChatRoomModel.findByIdAndUpdate(
-			roomId,
-			updateData,
-			{ new: true },
-		).exec();
+		const room = await ChatRoomModel.findByIdAndUpdate(roomId, updateData, {
+			new: true,
+		}).exec();
 
 		return room;
 	}
@@ -96,20 +116,23 @@ class ChatService {
 	}
 
 	/** Mark messages as seen */
-	public async markMessagesAsSeen(roomId: ObjectId, viewerType: string): Promise<void> {
+	public async markMessagesAsSeen(
+		roomId: ObjectId,
+		viewerType: string,
+	): Promise<void> {
 		const senderTypeToMark = viewerType === 'ADMIN' ? 'USER' : 'ADMIN';
 		const seenAt = new Date();
-		
+
 		await MessageModel.updateMany(
-			{ 
-				roomId, 
+			{
+				roomId,
 				senderType: senderTypeToMark,
-				seen: false 
+				seen: false,
 			},
-			{ 
-				seen: true, 
-				seenAt 
-			}
+			{
+				seen: true,
+				seenAt,
+			},
 		).exec();
 	}
 
@@ -137,7 +160,7 @@ Customer question: ${userMessage}`;
 			return response.text();
 		} catch (error) {
 			console.error('Gemini AI Error:', error);
-			return 'I apologize, but I\'m having trouble processing your request right now. Please try again or chat with our admin for assistance.';
+			return "I apologize, but I'm having trouble processing your request right now. Please try again or chat with our admin for assistance.";
 		}
 	}
 
@@ -153,7 +176,10 @@ Customer question: ${userMessage}`;
 	}
 
 	/** Update member status in all their chat rooms (used when user status changes) */
-	public async updateMemberStatusInRooms(memberId: ObjectId, memberStatus: string): Promise<number> {
+	public async updateMemberStatusInRooms(
+		memberId: ObjectId,
+		memberStatus: string,
+	): Promise<number> {
 		const result = await ChatRoomModel.updateMany(
 			{ memberId },
 			{ memberStatus },
