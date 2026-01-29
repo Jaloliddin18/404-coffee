@@ -36,7 +36,7 @@ class ChatService {
 		return room;
 	}
 
-	/** Get all chat rooms for admin */
+	/** Get all chat rooms for admin (only rooms with at least one message) */
 	public async getAllRooms(): Promise<ChatRoom[]> {
 		const rooms = await ChatRoomModel.find({
 			status: { $in: [ChatRoomStatus.PENDING, ChatRoomStatus.ACTIVE] },
@@ -44,7 +44,17 @@ class ChatService {
 			.sort({ updatedAt: -1 })
 			.exec();
 
-		return rooms;
+		// Filter out rooms that have no messages (user opened chat but didn't send anything)
+		const roomsWithMessages = await Promise.all(
+			rooms.map(async (room: any) => {
+				const messageCount = await MessageModel.countDocuments({
+					roomId: room._id,
+				}).exec();
+				return messageCount > 0 ? room : null;
+			}),
+		);
+
+		return roomsWithMessages.filter((room) => room !== null) as ChatRoom[];
 	}
 
 	/** Get unread message count for a room (messages from USER that are not seen) */
