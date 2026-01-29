@@ -34,6 +34,7 @@
 					<span class="new-dish-txt" style="margin-bottom: 30px">
 						COFFEE SHOP MENU
 					</span>
+					<% if (products && products.length > 0) { %>
 					<table class="table table-bordered table-hover">
 						<thead class="thead-light">
 							<tr class="thead-light">
@@ -100,6 +101,9 @@
 						<% }) %>
 						<!--  LOOP PRODUCTS: END  -->
 					</table>
+					<% } else { %>
+					<p style="font-size: 24px;">No Products added</p>
+					<% } %>
 					<div
 						class="long-input"
 						style="align-items: flex-end; margin-bottom: 25px"
