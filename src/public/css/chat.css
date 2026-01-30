@@ -327,10 +327,19 @@
 .read-status {
 	font-size: 0.8rem;
 	color: #aaaaaa;
+	display: inline-flex;
+	align-items: center;
 }
 
 .read-status.seen {
 	color: #4fc3f7;
+}
+
+/* Tick Icon Image */
+.tick-icon {
+	width: 16px;
+	height: 16px;
+	vertical-align: middle;
 }
 
 /* Chat Input - Light theme */

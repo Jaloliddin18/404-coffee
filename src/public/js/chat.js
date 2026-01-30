@@ -241,8 +241,8 @@ function renderMessages(messages) {
 			// Read status ticks for admin messages
 			const readStatus = isAdmin
 				? msg.seen
-					? '<span class="read-status seen">✓✓</span>'
-					: '<span class="read-status">✓</span>'
+					? '<span class="read-status seen"><img src="/img/double.png" alt="seen" class="tick-icon" /></span>'
+					: '<span class="read-status">✓</san>'
 				: '';
 
 			return `
@@ -295,13 +295,14 @@ function appendMessage(message) {
 	scrollToBottom();
 }
 
-// Update seen status to double ticks
+// Update seen status to double ticks (image)
 function updateMessageSeenStatus() {
 	const singleTicks = messagesContainerEl.querySelectorAll(
 		'.read-status:not(.seen)',
 	);
 	singleTicks.forEach((tick) => {
-		tick.textContent = '✓✓';
+		tick.innerHTML =
+			'<img src="/img/double.png" alt="seen" class="tick-icon" />';
 		tick.classList.add('seen');
 	});
 }

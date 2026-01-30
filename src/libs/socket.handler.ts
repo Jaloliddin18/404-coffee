@@ -31,7 +31,9 @@ export function initializeSocket(io: Server): void {
 						memberNick,
 					});
 
-					socket.join(`room:${room._id}`);
+					// Use toString() to ensure consistent room name format
+					const roomIdStr = room._id.toString();
+					socket.join(`room:${roomIdStr}`);
 					socket.emit('room:joined', { room });
 
 					// Get existing messages
@@ -40,7 +42,7 @@ export function initializeSocket(io: Server): void {
 
 					// Note: Admin is NOT notified here - chat will appear to admin only when user sends first message
 
-					console.log(`User ${memberNick} joined room ${room._id}`);
+					console.log(`User ${memberNick} joined room:${roomIdStr}`);
 				} catch (error) {
 					console.error('Error in user:join:', error);
 					socket.emit('error', { message: 'Failed to join chat room' });
@@ -89,8 +91,10 @@ export function initializeSocket(io: Server): void {
 					);
 
 					if (room) {
-						socket.join(`room:${roomId}`);
-						io.to(`room:${roomId}`).emit('room:status-updated', { room });
+						// Use room._id from database for consistent room naming
+						const roomIdStr = room._id.toString();
+						socket.join(`room:${roomIdStr}`);
+						io.to(`room:${roomIdStr}`).emit('room:status-updated', { room });
 
 						// Mark user messages as seen by admin
 						await chatService.markMessagesAsSeen(
@@ -103,8 +107,8 @@ export function initializeSocket(io: Server): void {
 						socket.emit('messages:history', { messages });
 
 						// Notify user that their messages were seen
-						io.to(`room:${roomId}`).emit('messages:seen', {
-							roomId,
+						io.to(`room:${roomIdStr}`).emit('messages:seen', {
+							roomId: roomIdStr,
 							seenBy: 'ADMIN',
 							seenAt: new Date(),
 						});
@@ -152,8 +156,9 @@ export function initializeSocket(io: Server): void {
 						content,
 					});
 
-					// Broadcast message to room
-					io.to(`room:${roomId}`).emit('message:receive', { message });
+					// Broadcast message to room - use room._id for consistent naming
+					const roomIdStr = room._id.toString();
+					io.to(`room:${roomIdStr}`).emit('message:receive', { message });
 
 					// Get updated unread count for this room
 					const unreadCount = await chatService.getUnreadCount(
@@ -176,12 +181,12 @@ export function initializeSocket(io: Server): void {
 
 					// Also update admin list with unread count
 					io.to('admin-room').emit('admin:message-received', {
-						roomId,
+						roomId: roomIdStr,
 						message,
 						unreadCount,
 					});
 
-					console.log(`Message sent in room ${roomId} by ${senderNick}`);
+					console.log(`Message sent in room:${roomIdStr} by ${senderNick}`);
 				} catch (error) {
 					console.error('Error in message:send:', error);
 					socket.emit('error', { message: 'Failed to send message' });
@@ -202,6 +207,7 @@ export function initializeSocket(io: Server): void {
 					);
 
 					// Notify the other party that their messages were seen
+					// Use the same roomId format that was used when joining
 					io.to(`room:${roomId}`).emit('messages:seen', {
 						roomId,
 						seenBy: viewerType,
@@ -209,7 +215,7 @@ export function initializeSocket(io: Server): void {
 					});
 
 					console.log(
-						`Messages in room ${roomId} marked as seen by ${viewerType}`,
+						`Messages in room:${roomId} marked as seen by ${viewerType}`,
 					);
 				} catch (error) {
 					console.error('Error in message:mark-seen:', error);
@@ -250,7 +256,10 @@ export function initializeSocket(io: Server): void {
 				);
 
 				if (room) {
-					io.to(`room:${roomId}`).emit('room:closed', { room });
+					// Use room._id from database to ensure room name matches what users joined with
+					const roomIdStr = room._id.toString();
+					console.log(`Emitting room:closed to room:${roomIdStr}`);
+					io.to(`room:${roomIdStr}`).emit('room:closed', { room });
 					io.to('admin-room').emit('admin:room-closed', { room });
 				}
 
