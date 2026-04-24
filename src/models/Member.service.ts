@@ -10,7 +10,7 @@ import Errors, { Message } from '../libs/Error';
 import { HttpCode } from '../libs/Error';
 import { MemberStatus, MemberType } from '../libs/enums/member.enum';
 import { lookupFavorite, shapeIntoMongooseObjectId } from '../libs/config';
-import * as bycript from 'bcryptjs';
+const bycript = require('bcryptjs');
 import { Products } from '../libs/types/product';
 import { T } from '../libs/types/common';
 import { LikeGroup } from '../libs/enums/like.enum';

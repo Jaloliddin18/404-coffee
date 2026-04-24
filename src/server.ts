@@ -1,5 +1,7 @@
 import dotenv from 'dotenv';
-dotenv.config();
+dotenv.config({
+	path: process.env.NODE_ENV === 'production' ? '.env.production' : '.env',
+});
 import mongoose from 'mongoose';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
@@ -19,7 +21,11 @@ mongoose
 		// Initialize Socket.io with CORS
 		const io = new Server(httpServer, {
 			cors: {
-				origin: ['http://localhost:3000', 'http://localhost:3002', 'http://localhost:3006'],
+				origin: [
+					'http://localhost:3000',
+					'http://localhost:3002',
+					'http://localhost:3006',
+				],
 				methods: ['GET', 'POST'],
 				credentials: true,
 			},
@@ -35,4 +41,3 @@ mongoose
 		});
 	})
 	.catch((err) => console.log('Error on connection MongoDB', err));
-
