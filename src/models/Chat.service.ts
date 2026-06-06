@@ -8,13 +8,13 @@ import {
 	Message,
 	MessageInput,
 } from '../libs/types/chat';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import Groq from 'groq-sdk';
 
 class ChatService {
-	private genAI: GoogleGenerativeAI;
+	private groq: Groq;
 
 	constructor() {
-		this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+		this.groq = new Groq({ apiKey: process.env.GROQ_API_KEY || '' });
 	}
 
 	/** Create or get existing chat room for a user */
@@ -146,31 +146,25 @@ class ChatService {
 		).exec();
 	}
 
-	/** Get AI response using Gemini */
 	public async getAIResponse(userMessage: string): Promise<string> {
 		try {
-			const model = this.genAI.getGenerativeModel({
-				model: 'gemini-2.5-flash',
+			const completion = await this.groq.chat.completions.create({
+				messages: [
+					{
+						role: 'system',
+						content: 'You are a helpful coffee shop assistant for "404 Coffee". Help customers with menu questions, orders, store hours, and coffee recommendations. Be friendly and concise.'
+					},
+					{
+						role: 'user',
+						content: userMessage
+					}
+				],
+				model: 'llama3-8b-8192',
 			});
-
-			const prompt = `You are a helpful coffee shop assistant for "404 Coffee". 
-You help customers with:
-- Menu questions (coffee types, prices, recommendations)
-- Order inquiries
-- Store hours and location information
-- Coffee brewing tips and recommendations
-
-Be friendly, helpful, and concise. If asked about something outside coffee shop topics, 
-kindly redirect the conversation back to coffee-related assistance.
-
-Customer question: ${userMessage}`;
-
-			const result = await model.generateContent(prompt);
-			const response = result.response;
-			return response.text();
+			return completion.choices[0]?.message?.content || "Sorry, I couldn't process your request.";
 		} catch (error) {
-			console.error('Gemini AI Error:', error);
-			return "I apologize, but I'm having trouble processing your request right now. Please try again or chat with our admin for assistance.";
+			console.error('Groq AI Error:', error);
+			return "I'm having trouble right now. Please try again or chat with our admin.";
 		}
 	}
 
